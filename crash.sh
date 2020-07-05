@@ -117,12 +117,12 @@ function lldp_func(){
 		fi
 
 		if [ "$nic_dev" == "ovirtmgmt" ]; then
-			ovirtmgmt_mac=`ifconfig $nic_dev |egrep "ether" | awk '{print $2}'`
+			ovirtmgmt_mac=`ifconfig $nic_dev |grep "ether" | awk '{print $2}'`
 			continue
 		fi
 			
 		nic_name[$nic_idx]=$nic_dev
-		nic_mac[$nic_idx]=`ifconfig $nic_dev |egrep "ether" | awk '{print $2}'`
+		nic_mac[$nic_idx]=`ifconfig $nic_dev |grep "ether" | awk '{print $2}'`
 		let nic_idx=nic_idx+1
 	done
 	
@@ -180,12 +180,12 @@ function lldp_rollback() {
 		fi
 
 		if [ "$nic_dev" == "ovirtmgmt" ]; then
-			ovirtmgmt_mac=`ifconfig $nic_dev |egrep "ether" | awk '{print $2}'`
+			ovirtmgmt_mac=`ifconfig $nic_dev |grep "ether" | awk '{print $2}'`
 			continue
 		fi
 			
 		nic_name[$nic_idx]=$nic_dev
-		nic_mac[$nic_idx]=`ifconfig $nic_dev |egrep "ether" | awk '{print $2}'`
+		nic_mac[$nic_idx]=`ifconfig $nic_dev |grep "ether" | awk '{print $2}'`
 		let nic_idx=nic_idx+1
 	done
 	
