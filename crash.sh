@@ -220,7 +220,7 @@ function lldp_rollback() {
 		return
 	fi
 
-	lldptool set-lldp -i $bridge_nic adminStatus=$adm_pre
+	dum=`lldptool set-lldp -i $bridge_nic adminStatus=$adm_pre`
 	adm_status=`lldptool get-lldp -i $bridge_nic adminStatus`
 	adm_status=${adm_status##*=}
 	if [ "$adm_status" == "$adm_pre" ]; then
