@@ -5,7 +5,9 @@ cat << EndOfHelp
 	Usage: $0 <func_name> <args> | tee $0.log
 	Commands - are case insensitive:
 		thp - disable transparent_hugepage
+		thp_rollback - rollback thp config
 		lldp - disable lldp function on nic device
+		lldp_rollback - rollback lldp config
 EndOfHelp
 }
 
