@@ -1,0 +1,13 @@
+[Unit]
+Description=lldp Service
+After=network.target lldpad.service multi-user.target
+
+[Service]
+Type=idle
+RemainAfterExit=no
+
+ExecStart=/root/lldp.sh start
+ExecStop=/root/lldp.sh stop
+
+[Install]
+WantedBy=multi-user.target
