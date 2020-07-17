@@ -6,8 +6,8 @@ After=network.target nvidia-vgpu-mgr.service multi-user.target
 Type=idle
 RemainAfterExit=no
 
-ExecStart=/root/vgpu.sh start
-ExecStop=/root/vgpu.sh stop
+ExecStart=/etc/vgpu/vgpu.sh start
+ExecStop=/etc/vgpu/vgpu.sh stop
 
 [Install]
 WantedBy=multi-user.target
