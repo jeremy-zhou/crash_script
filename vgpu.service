@@ -1,0 +1,13 @@
+[Unit]
+Description=lldp Service
+After=network.target nvidia-vgpu-mgr.service multi-user.target
+
+[Service]
+Type=idle
+RemainAfterExit=no
+
+ExecStart=/root/vgpu.sh start
+ExecStop=/root/vgpu.sh stop
+
+[Install]
+WantedBy=multi-user.target
