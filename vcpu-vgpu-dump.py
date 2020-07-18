@@ -3,10 +3,32 @@
 import os
 import sys
 
+import ConfigParser
 import collections
 import re
 import subprocess
 import uuid
+
+def parse_args(arg_file_name):
+	cf = ConfigParser.ConfigParser()
+	cf.read(arg_file_name)
+	
+	secs = cf.sections()
+	vcpu = cf.options('vcpu-vgpu')
+
+	items = cf.items('vcpu-vgpu')
+
+	args = {}
+	args['vcpus_per_vm'] = int(cf.get('vcpu-vgpu','vcpus_per_vm'))
+	args['vgpu_type'] = cf.get('vcpu-vgpu','vgpu_type')
+	vms_raw = cf.get('vcpu-vgpu','vms')
+	vms_raw = vms_raw.strip()
+	vms_raw_list = vms_raw.split(',')
+	vms_list = []
+	for vm_raw in vms_raw_list:
+		vms_list.append(vm_raw.strip())
+	args['vms'] = vms_list
+	return args
 
 class GPU_Device:
 	def __init__(self, devname, typename):
@@ -203,7 +225,7 @@ def dump_result(arg_vm_list, arg_cpu_num):
 			vm.cpu_node = cpu_node.node
 			
 		vmlist.append(vm)
-	fo = open('/tmp/vcpu_gpu.conf','w')
+	fo = open('/etc/vcpu-vgpu/vcpu-vgpu.dump','w')
 	fo.write('{}\t{}\t{}\t{:>20}\t{}\t{:>15}\n'.format('name', 'cpu node', 'cpu list', \
 						'gpu node', 'gpu dev', 'gpu uuid'))
 	print('{}\t{}\t{}\t{:>20}\t{}\t{:>15}'.format('name', 'cpu node', 'cpu list', \
@@ -218,15 +240,13 @@ def dump_result(arg_vm_list, arg_cpu_num):
 	fo.close()	
 		
 
-vm_list = ['vm0','vm1','vm2','vm3','vm4']
-cpus_num = 8
-vgpu_type="nvidia-18"
-
-vm = VmInfo("vm0")
-print(vm.uuid)
+#vm_list = ['vm0','vm1','vm2','vm3','vm4']
+#cpus_num = 8
+#vgpu_type="nvidia-18"
+args = parse_args('/etc/vcpu-vgpu/vcpu-vgpu.conf')
 
 
-get_nodeinfo(vgpu_type)
+get_nodeinfo(args['vgpu_type'])
 if _NODE_NUM != len(_NODE_LIST):
     exit()
 for node in _NODE_LIST:
@@ -234,21 +254,7 @@ for node in _NODE_LIST:
 	print(node.cpu_list, node.cpu_avail())
 	print(node.vgpu_list, node.vgpu_avail())
 
-dump_result(vm_list, cpus_num)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+dump_result(args['vms'], args['vcpus_per_vm'])
 
 
 
