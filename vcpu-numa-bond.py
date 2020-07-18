@@ -85,6 +85,21 @@ def vcpupin(arg_cpu_list):
 		vcpupin.setAttribute('vcpu', str(i))
 		vcpupin.setAttribute('cpuset', str(arg_cpu_list[i]))
 		cputune.appendChild(vcpupin)	
+	
+	emulatorpins = cputune.getElementsByTagName('emulatorpin')	
+	emulatorpin = None
+	if len(emulatorpins) == 0:
+		emulatorpin = domxml.createElement('emulatorpin')
+		cputune.appendChild(emulatorpin)
+	else:
+		emulatorpin = emulatorpins[0]
+	s = ''
+	for i, item in enumerate(arg_cpu_list):
+		if i != 0:
+			s = s + ','
+		s = s + str(item)	
+	emulatorpin.setAttribute('cpuset', s)
+		
 	hooking.write_domxml(domxml)	
 
 def numatune(arg_cpu_node):
