@@ -3,7 +3,7 @@
 import os
 import sys
 
-_CONF_FILE = '/tmp/vcpu_gpu.conf'
+_CONF_FILE = '/etc/vcpu-vgpu/vcpu-vgpu.dump'
 
 def get_devuuid_list():
 	conf = open(_CONF_FILE, 'r')

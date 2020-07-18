@@ -9,7 +9,7 @@ import re
 import subprocess
 
 
-_CONF_FILE = '/tmp/vcpu_gpu.conf'
+_CONF_FILE = '/etc/vcpu-vgpu/vcpu-vgpu.dump'
 
 def get_vm_name():
 	domxml = hooking.read_domxml()
