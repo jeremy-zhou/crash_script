@@ -232,6 +232,26 @@ function lldp_rollback() {
 	echo "[-] failed to rollback lldp for $bridge_nic"
 }
 
+function vcpu_func() {
+	echo "[+] configure vcpu-gpu"
+	mkdir /etc/vcpu-vgpu
+	cp -f ./mdev-create.py /etc/vcpu-vgpu/
+	cp -f ./vcpu-vgpu-dump.py /etc/vcpu-vgpu/	
+	cp -f ./vcpu-vgpu.sh /etc/vcpu-vgpu/	
+	
+	cp -f ./vcpu-sock-tune.py /usr/libexec/vdsm/hooks/before_vm_start/
+	cp -f ./vcpu-numa-bond.py /usr/libexec/vdsm/hooks/before_vm_start/
+	chmod +x /usr/libexec/vdsm/hooks/before_vm_start/vcpu-sock-tune.py
+	chmod +x /usr/libexec/vdsm/hooks/before_vm_start/vcpu-numa-bond.py
+	
+	cp -f ./vgpu.service /usr/lib/systemd/system/	
+	systemctl enable vgpu.service
+
+	echo "[+] please configure vms information"
+
+}
+	
+
 
 COMMAND=$(echo "$1"|tr "[:upper:]" "[:lower:]")
 
@@ -247,6 +267,8 @@ case $COMMAND in
 		lldp_func;;
 	'lldp_rollback')
 		lldp_rollback;;
+	'vcpu')
+		vcpu_func;;
 	*)
 		usage
 		exit 0;;
