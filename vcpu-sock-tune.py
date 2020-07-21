@@ -12,8 +12,8 @@ def tune_socket():
 	has_cur_attr = vcpu.hasAttribute('current')
 	cpu_num_assigned = -1
 	if has_cur_attr:
-		cpu_num_assigned = vcpu.getAttribute('current')
-		vcpu.childNodes[0].data = int(cpu_num_assigned)
+		cpu_num_assigned = int(vcpu.getAttribute('current'))
+		vcpu.childNodes[0].data = cpu_num_assigned
 	else:
 		cpu_num_assigned= int(vcpu.childNodes[0].data)
 
