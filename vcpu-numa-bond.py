@@ -138,12 +138,12 @@ def numatune(arg_cpu_node):
 vm_name = get_vm_name()
 node = get_node(vm_name)
 cpu_list = get_cpulist(vm_name)
-fo = open('/tmp/vmname.txt','a+')
-fo.write('node: {}\n'.format(node))
-fo.write('name: {}\n'.format(vm_name))
-for ele in cpu_list:
-	fo.write('{}\n'.format(ele))
-fo.close()
+#fo = open('/tmp/vmname.txt','a+')
+#fo.write('node: {}\n'.format(node))
+#fo.write('name: {}\n'.format(vm_name))
+#for ele in cpu_list:
+#	fo.write('{}\n'.format(ele))
+#fo.close()
 vcpupin(cpu_list)
 numatune(node)
 
