@@ -33,7 +33,7 @@ def get_node(arg_vm_name):
 		if vm_name != arg_vm_name:
 			continue
 		
-		return line[1].strip()
+		return int(line[1].strip())
 	return None
 
 def get_cpulist(arg_vm_name):
