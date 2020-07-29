@@ -69,11 +69,11 @@ class Node:
 		self.cpu_list = lcpu
 
 	def get_exhausted_cpu_list(self, arg_cpu_num):
-		avail = cpu_avail()	
+		avail = self.cpu_avail()	
 		idx_list = [2,4,11,13,21,23,33,35]
 		ret_list = []
 		if avail != 0:
-			ret_list.extend(get_cpu_list(self,avail))	
+			ret_list.extend(self.get_cpu_list(avail))	
 		for i in range(arg_cpu_num - avail):
 			ret_list.append(self.cpu_list[idx_list[i]]) 
 		self.exhausted_time = 1
