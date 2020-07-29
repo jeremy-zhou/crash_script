@@ -61,11 +61,23 @@ class Node:
 		self.cpu_used = 0
 
 		self.vgpu_list = []
+		self.exhausted_time = 0
 
 	def setcpuinfo(self, lcpu):
 		self.cpu_total = len(lcpu)
 		self.cpu_used = 0
 		self.cpu_list = lcpu
+
+	def get_exhausted_cpu_list(self, arg_cpu_num):
+		avail = cpu_avail()	
+		idx_list = [2,4,11,13,21,23,33,35]
+		ret_list = []
+		if avail != 0:
+			ret_list.extend(get_cpu_list(self,avail))	
+		for i in range(arg_cpu_num - avail):
+			ret_list.append(self.cpu_list[idx_list[i]]) 
+		self.exhausted_time = 1
+		return ret_list
 
 	def cpu_avail(self):
 		return self.cpu_total - self.cpu_used
@@ -210,7 +222,7 @@ def get_node_with_avail_cpu(arg_cpu_num):
 
 def dump_result(arg_vm_list, arg_cpu_num):
 	vmlist = []	
-	for vm_name in arg_vm_list:
+	for idx, vm_name in enumerate(arg_vm_list):
 		numa = get_node_with_least_gpu()
 		vm = VmInfo(vm_name)
 		vm.dev = numa.get_gpu_dev()
@@ -221,8 +233,15 @@ def dump_result(arg_vm_list, arg_cpu_num):
 			vm.cpu_node = numa.node
 		else:
 			cpu_node = get_node_with_avail_cpu(arg_cpu_num)
-			vm.bond_cpulist = cpu_node.get_cpu_list(arg_cpu_num)
-			vm.cpu_node = cpu_node.node
+			if cpu_node is None:
+				for nnode in _NODE_LIST:
+					if nnode.exhausted_time == 0:
+						vm.bond_cpulist = nnode.get_exhausted_cpu_list(arg_cpu_num)
+						vm.cpu_node = nnode.node				
+						break
+			else:
+				vm.bond_cpulist = cpu_node.get_cpu_list(arg_cpu_num)
+				vm.cpu_node = cpu_node.node
 			
 		vmlist.append(vm)
 	fo = open('/etc/vcpu-vgpu/vcpu-vgpu.dump','w')
