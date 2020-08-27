@@ -6,44 +6,8 @@ import sys
 import collections
 import re
 import subprocess
-import uuid
 
 
-def get_nodes_num(str0):
-    	ret = re.sub('available:', '', str0, 1)
-    	ret = re.sub('nodes.*', '', ret, 1)
-    	ret = ret.strip()
-    	return int(ret)
-
-def get_cpulist(str0):
-    	ret = re.sub('node\s+\d+\s+cpus:', '', str0, 1)
-    	ret = ret.strip()
-    	lpro = ret.split()
-    	num_list = list(map(int, lpro))
-    	return num_list
-
-def get_node_num(str0):
-	ret = re.sub(':.*', '', str0, 1)
-	ret = re.sub('node', '', ret, 1)
-	ret = re.sub('cpus', '', ret, 1)
-	ret = ret.strip()
-	return int(ret)
-
-def get_nodeinfo(arg_vgpu_type):
-    	l = subprocess.check_output(['numactl', '--hardware'])
-    	l = l.decode('utf-8')
-	l = l.splitlines()
-	for i, val in enumerate(l):
-		if re.findall('available:\s+\d+\s+nodes', val):
-			global _NODE_NUM
-	            	_NODE_NUM = get_nodes_num(val)
-	        elif re.findall('node\s+\d+\s+cpus:', val):
-			node_ins = Node(get_node_num(val))
-			node_ins.setcpuinfo(get_cpulist(val))
-			_NODE_LIST.append(node_ins)
-	        else:
-	            pass
-	
 def yield_pack(cpu_info_output):
 	proc_id = None
 	phy_id = None
@@ -119,25 +83,22 @@ def get_numa(phy):
 		G_NUMA.append(numa)
 		return numa
 
-def construct_numa(processor, phy, core):
-	numa = get_numa(phy)
-	numa.new_processor(core,processor)		
+def construct_numa():
+	l = subprocess.check_output(['cat', '/proc/cpuinfo'])
+	l = l.decode('utf-8')
+	l = l.splitlines()
+	pack_gen = yield_pack(l)
+	for p_tuple in pack_gen:
+		numa = get_numa(p_tuple[1])
+		numa.new_processor(p_tuple[2], p_tuple[0])	
 
-l = subprocess.check_output(['cat', '/proc/cpuinfo'])
-l = l.decode('utf-8')
-l = l.splitlines()
-pack_gen = yield_pack(l)
-for i in pack_gen:
-	print('{} {} {}'.format(i[0],i[1],i[2]))
-	construct_numa(i[0],i[1],i[2])
+	for numa in G_NUMA:
+		print('numa id: {}'.format(numa.numa_id))
+		for core in numa.cores:
+			print('  core id: {}'.format(core.core_id))
+			for proc in core.processors:
+				print('    processor {}'.format(proc))
 
-for numa in G_NUMA:
-	print('numa id: {}'.format(numa.numa_id))
-	for core in numa.cores:
-		print('  core id: {}'.format(core.core_id))
-		for proc in core.processors:
-			print('    processor {}'.format(proc))
-
-
+construct_numa()
 
 
