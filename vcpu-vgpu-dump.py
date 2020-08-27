@@ -167,23 +167,137 @@ def get_node_num(str0):
 	ret = re.sub('cpus', '', ret, 1)
 	ret = ret.strip()
 	return int(ret)
+#############################################################################
+def yield_pack(cpu_info_output):
+	proc_id = None
+	phy_id = None
+	core_id = None
+	for i, line in enumerate(cpu_info_output):
+		if re.findall('processor\s+:', line):
+			proc_id = get_processor(line)
+			if proc_id is not None  and phy_id is not None  and core_id is not None:
+				yield(proc_id,phy_id,core_id) 
+				proc_id = None
+				phy_id = None
+				core_id = None
+		if re.findall('physical\s+id\s+:', line):
+			phy_id = get_physical_id(line)
+			if proc_id is not None  and phy_id is not None  and core_id is not None:
+				yield(proc_id,phy_id,core_id) 
+				proc_id = None
+				phy_id = None
+				core_id = None
+		if re.findall('core\s+id\s+:', line):
+			core_id = get_core_id(line)
+			if proc_id is not None  and phy_id is not None  and core_id is not None:
+				yield(proc_id,phy_id,core_id) 
+				proc_id = None
+				phy_id = None
+				core_id = None
 
-def get_nodeinfo(arg_vgpu_type):
-    	l = subprocess.check_output(['numactl', '--hardware'])
-    	l = l.decode('utf-8')
+
+def get_processor(val):
+	ret = re.sub('processor\s+:\s+', '', val, 1)
+	ret = ret.strip()
+	return int(ret)
+
+def get_physical_id(val):
+	ret = re.sub('physical\s+id\s+:\s+', '', val, 1)
+	ret = ret.strip()
+	return int(ret)
+
+def get_core_id(val):
+	ret = re.sub('core\s+id\s+:\s+', '', val, 1)
+	ret = ret.strip()
+	return int(ret)
+
+class CCore:
+	def __init__(self,core_id,processor_id):
+		self.core_id = core_id
+		self.processors = []	
+		self.processors.append(processor_id)	
+	def new_processor(self,core_id,processor_id):
+		assert(self.core_id == core_id)
+		self.processors.append(processor_id)	
+
+class CNuma:
+	def __init__(self,numa_id):
+		self.numa_id = numa_id 
+		self.cores = []
+	def new_processor(self,core_id,processor_id):
+		for core in self.cores:
+			if core.core_id == core_id:
+				core.new_processor(core_id, processor_id)	
+				break
+		else:
+			core_new = CCore(core_id,processor_id)
+			self.cores.append(core_new)
+
+def get_numa(numa_all, phy):
+	for numa in numa_all:
+		if numa.numa_id == phy:
+			return numa
+	else:
+		numa = CNuma(phy)
+		numa_all.append(numa)
+		return numa
+
+def gen_numa_cpu_list(numa):
+	ret = []
+	for core in numa.cores:
+		ret.extend(core.processors)	
+	return ret
+
+def construct_numa():
+	l = subprocess.check_output(['cat', '/proc/cpuinfo'])
+	l = l.decode('utf-8')
 	l = l.splitlines()
-	for i, val in enumerate(l):
-		if re.findall('available:\s+\d+\s+nodes', val):
-			global _NODE_NUM
-	            	_NODE_NUM = get_nodes_num(val)
-	        elif re.findall('node\s+\d+\s+cpus:', val):
-			node_ins = Node(get_node_num(val))
-			node_ins.setcpuinfo(get_cpulist(val))
-			_NODE_LIST.append(node_ins)
-	        else:
-	            pass
-	if _NODE_NUM != len(_NODE_LIST):
-		return
+
+	numa_info = []
+	pack_gen = yield_pack(l)
+	for p_tuple in pack_gen:
+		numa = get_numa(numa_info, p_tuple[1])
+		numa.new_processor(p_tuple[2], p_tuple[0])	
+
+	for numa in numa_info:
+		node_ins = Node(numa.numa_id)
+		node_ins.setcpuinfo(gen_numa_cpu_list(numa))
+		_NODE_LIST.append(node_ins)
+
+##################################################################################
+	
+def get_nodeinfo(arg_vgpu_type):
+    	#l = subprocess.check_output(['numactl', '--hardware'])
+    	#l = l.decode('utf-8')
+	#l = l.splitlines()
+	#for i, val in enumerate(l):
+	#	if re.findall('available:\s+\d+\s+nodes', val):
+	#		global _NODE_NUM
+	#            	_NODE_NUM = get_nodes_num(val)
+	#        elif re.findall('node\s+\d+\s+cpus:', val):
+	#		node_ins = Node(get_node_num(val))
+	#		node_ins.setcpuinfo(get_cpulist(val))
+	#		_NODE_LIST.append(node_ins)
+	#        else:
+	#            pass
+	l = subprocess.check_output(['cat', '/proc/cpuinfo'])
+	l = l.decode('utf-8')
+	l = l.splitlines()
+
+	numa_info = []
+	pack_gen = yield_pack(l)
+	for p_tuple in pack_gen:
+		numa = get_numa(numa_info, p_tuple[1])
+		numa.new_processor(p_tuple[2], p_tuple[0])	
+	global _NODE_NUM
+	_NODE_NUM = len(numa_info)
+	for numa in numa_info:
+		node_ins = Node(numa.numa_id)
+		node_ins.setcpuinfo(gen_numa_cpu_list(numa))
+		_NODE_LIST.append(node_ins)
+
+	#if _NODE_NUM != len(_NODE_LIST):
+	#	return
 		
 	for gpu_device in per_mdev_device():
 		gpu = GPU_Device(gpu_device, arg_vgpu_type)	
@@ -259,9 +373,6 @@ def dump_result(arg_vm_list, arg_cpu_num):
 	fo.close()	
 		
 
-#vm_list = ['vm0','vm1','vm2','vm3','vm4']
-#cpus_num = 8
-#vgpu_type="nvidia-18"
 args = parse_args('/etc/vcpu-vgpu/vcpu-vgpu.conf')
 
 

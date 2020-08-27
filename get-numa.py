@@ -51,7 +51,6 @@ def get_core_id(val):
 	ret = ret.strip()
 	return int(ret)
 
-G_NUMA = []
 class CCore:
 	def __init__(self,core_id,processor_id):
 		self.core_id = core_id
@@ -74,31 +73,36 @@ class CNuma:
 			core_new = CCore(core_id,processor_id)
 			self.cores.append(core_new)
 
-def get_numa(phy):
-	for numa in G_NUMA:
+def get_numa(numa_all, phy):
+	for numa in numa_all:
 		if numa.numa_id == phy:
 			return numa
 	else:
 		numa = CNuma(phy)
-		G_NUMA.append(numa)
+		numa_all.append(numa)
 		return numa
+
+def gen_numa_cpu_list(numa):
+	ret = []
+	for core in numa.cores:
+		ret.extend(core.processors)	
+	return ret
 
 def construct_numa():
 	l = subprocess.check_output(['cat', '/proc/cpuinfo'])
 	l = l.decode('utf-8')
 	l = l.splitlines()
+
+	numa_info = []
 	pack_gen = yield_pack(l)
 	for p_tuple in pack_gen:
-		numa = get_numa(p_tuple[1])
+		numa = get_numa(numa_info, p_tuple[1])
 		numa.new_processor(p_tuple[2], p_tuple[0])	
 
-	for numa in G_NUMA:
+	for numa in numa_info:
 		print('numa id: {}'.format(numa.numa_id))
-		for core in numa.cores:
-			print('  core id: {}'.format(core.core_id))
-			for proc in core.processors:
-				print('    processor {}'.format(proc))
-
+		print(gen_numa_cpu_list(numa))	
+		
 construct_numa()
 
 
