@@ -242,9 +242,12 @@ function vcpu_func() {
 	cp -f ./vcpu-sock-tune.py /usr/libexec/vdsm/hooks/before_vm_start/
 	cp -f ./vcpu-numa-bond.py /usr/libexec/vdsm/hooks/before_vm_start/
 	cp -f ./vcpu-numa-bond-coarse.py /usr/libexec/vdsm/hooks/before_vm_start/
+	cp -f ./cpu-tune.py /usr/libexec/vdsm/hooks/before_vm_start/
 	chmod +x /usr/libexec/vdsm/hooks/before_vm_start/vcpu-sock-tune.py
 	chmod +x /usr/libexec/vdsm/hooks/before_vm_start/vcpu-numa-bond-coarse.py
-	chmod -x /usr/libexec/vdsm/hooks/before_vm_start/vcpu-numa-bond.py
+	chmod +x /usr/libexec/vdsm/hooks/before_vm_start/cpu-tune.py
+	
+	chmod -x /usr/libexec/vdsm/hooks/before_vm_start/vcpu-numa-bond-coarse.py
 	
 	cp -f ./vgpu.service /usr/lib/systemd/system/	
 	systemctl enable vgpu.service
